@@ -1,6 +1,6 @@
 /** Server startup for BizTime. */
 
-
+require('dotenv').config()
 const app = require("./app");
 
 
