@@ -59,5 +59,51 @@ router.post("/", async function (req, res, next) {
 });
 
 
+/** Edit existing company. Should return 404 if company cannot be found.
+ * Needs to be given JSON like: {name, description} 
+ * Returns update company object: {company: {code, name, description}}
+ */
+router.patch("/:code", async function (req, res, next) {
+    try {
+        const { name, description } = req.body;
+        const result = await db.query(
+                `UPDATE companies SET name=$1, description=$2
+                WHERE code = $3
+                RETURNING code, name, description`,
+            [name, description, req.params.code]
+        );
+
+        if (Object.keys(result.rows).length === 0) {
+            throw new ExpressError('The company code entered cannot be found.', 404);
+        }
+
+        return res.json({company: result.rows[0]});
+    } catch (err) {
+        return next(err);
+    }
+});
+
+
+
+/** Deletes company. Should return 404 if company cannot be found.
+ * Returns {status: "deleted"} */
+router.delete("/:code", async function (req, res, next) {
+    try {
+        const result = await db.query(
+            "DELETE FROM companies WHERE code = $1",
+            [req.params.code]
+        );
+
+        if (result.rowCount === 0) {
+            throw new ExpressError('The company code entered cannot be found.', 404);
+        }
+
+        return res.json({status: "Deleted"});
+    }catch (err) {
+        return next(err);
+    }
+});
+
+
 
 module.exports = router;
