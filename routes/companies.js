@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require("../db");
 const ExpressError = require('../expressError');
+
 const router = new express.Router();
 
 
@@ -8,7 +9,7 @@ const router = new express.Router();
 router.get("/", async function (req, res, next) {
     try {
         const results = await db.query(
-            `SELECT code, name, description FROM companies`);
+            `SELECT code, name FROM companies`);
         return res.json({companies: results.rows});
     } catch (err) {
         return next(err);
@@ -17,21 +18,34 @@ router.get("/", async function (req, res, next) {
 
 
 
-/**GET /companies/[code] : Return obj of company: {company: {code, name, description}}
+/**GET /companies/[code] : Return obj of company: {company: {code, name, description, invoices: [id, ...]}}
  * If the company given cannot be found, this should return a 404 status response.
  */
 router.get("/:code", async function (req, res, next) {
     try {
-        const results = await db.query(
+        const companyResult = await db.query(
             `SELECT code, name, description 
             FROM companies
             WHERE code=$1`, [req.params.code]);
 
-        if (Object.keys(results.rows).length === 0) {
+        const invoiceResult = await db.query(
+            `SELECT id
+                FROM invoices
+                WHERE comp_code = $1`,
+            [req.params.code]
+        );
+
+        if (Object.keys(companyResult.rows).length === 0) {
             throw new ExpressError('The company code entered cannot be found.', 404);
         }
 
-        return res.json({company: results.rows[0]});
+        const company = companyResult.rows[0];
+        const invoices = invoiceResult.rows;
+
+        // add invoices to object key and use map to only include invoice id's
+        company.invoices = invoices.map(inv => inv.id);
+
+        return res.json({"company": company});
     } catch (err) {
         return next(err);
     }
@@ -90,7 +104,8 @@ router.patch("/:code", async function (req, res, next) {
 router.delete("/:code", async function (req, res, next) {
     try {
         const result = await db.query(
-            "DELETE FROM companies WHERE code = $1",
+            `DELETE FROM companies 
+            WHERE code = $1`,
             [req.params.code]
         );
 
