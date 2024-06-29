@@ -74,14 +74,13 @@ describe("POST /companies", function() {
         const response = await request(app)
             .post(`/companies`)
             .send({
-                "code": "amz",
                 "name": "Amazon",
                 "description": "eCommerce giant"
             });
         expect(response.statusCode).toEqual(201);
         expect(response.body).toEqual({
             "company": {
-                "code": "amz",
+                "code": "amazon",
                 "name": "Amazon",
                 "description": "eCommerce giant"
             }

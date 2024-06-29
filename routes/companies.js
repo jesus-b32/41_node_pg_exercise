@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require("../db");
 const ExpressError = require('../expressError');
+const slugify = require("slugify");
 
 const router = new express.Router();
 
@@ -42,7 +43,7 @@ router.get("/:code", async function (req, res, next) {
         const company = companyResult.rows[0];
         const invoices = invoiceResult.rows;
 
-        // add invoices to object key and use map to only include invoice id's
+        // add invoices key to company object and use map to only include invoice id's from vaiable above
         company.invoices = invoices.map(inv => inv.id);
 
         return res.json({"company": company});
@@ -53,12 +54,13 @@ router.get("/:code", async function (req, res, next) {
 
 
 
-/** Adds a company. Needs to be given JSON like: {code, name, description}
+/** Adds a company. Needs to be given JSON like: {name, description}
  * Returns obj of new company:  {company: {code, name, description}}
  */
 router.post("/", async function (req, res, next) {
     try {
-        const { code, name, description } = req.body;
+        const { name, description } = req.body;
+        const code = slugify(name, {lower: true, remove: /[*+~.()'"!:@]/g});
         const result = await db.query(
                 `INSERT INTO companies (code, name, description) 
                 VALUES ($1, $2, $3)
