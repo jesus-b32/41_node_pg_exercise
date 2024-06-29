@@ -12,11 +12,11 @@ async function testData() {
                             ('ibm', 'IBM', 'Big blue.')`);
 
     await db.query(
-            `INSERT INTO invoices (comp_code, amt, paid, paid_date)
-            VALUES ('apple', 100, false, null),
-                    ('apple', 200, false, null),
-                    ('apple', 300, true, '2018-01-01'),
-                    ('ibm', 400, false, null)`);
+            `INSERT INTO invoices (comp_code, amt, paid, add_date, paid_date)
+            VALUES ('apple', 100, false, '2024-06-21', null),
+                    ('apple', 200, false, '2024-06-21', null),
+                    ('apple', 300, true, '2024-06-21', '2024-06-28'),
+                    ('ibm', 400, false, '2024-06-21', null)`);
 }
 
 
