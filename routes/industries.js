@@ -1,7 +1,6 @@
 const express = require('express');
 const db = require("../db");
 const ExpressError = require('../expressError');
-// const slugify = require("slugify");
 
 const router = new express.Router();
 
@@ -24,72 +23,44 @@ router.get("/", async function (req, res, next) {
 
 
 
-/** Adds a company. Needs to be given JSON like: {name, description}
- * Returns obj of new company:  {company: {code, name, description}}
+/** Adds an industry. Needs to be given JSON like: {code,industry}
+ * Returns obj of new company:  {industry: {code, industry}}
  */
 router.post("/", async function (req, res, next) {
     try {
-        const { name, description } = req.body;
-        const code = slugify(name, {lower: true, remove: /[*+~.()'"!:@]/g});
+        const { code, industry } = req.body;
         const result = await db.query(
-                `INSERT INTO companies (code, name, description) 
-                VALUES ($1, $2, $3)
-                RETURNING code, name, description`,
-                [code, name, description]
+                `INSERT INTO industries (code, industry) 
+                VALUES ($1, $2)
+                RETURNING code, industry`,
+                [code, industry]
         );
 
-        return res.status(201).json({company: result.rows[0]});
+        return res.status(201).json({industry: result.rows[0]});
     } catch (err) {
         return next(err);
     }
 });
 
 
-/** Edit existing company. Should return 404 if company cannot be found.
- * Needs to be given JSON like: {name, description} 
- * Returns update company object: {company: {code, name, description}}
+/** Associate an industry to a company. Needs to be given JSON like: {industryCode, companyCode}
+ * Returns obj of new company:  {assoication: {companyCode,industryCode}}
  */
-// router.patch("/:code", async function (req, res, next) {
-//     try {
-//         const { name, description } = req.body;
-//         const result = await db.query(
-//                 `UPDATE companies SET name=$1, description=$2
-//                 WHERE code = $3
-//                 RETURNING code, name, description`,
-//             [name, description, req.params.code]
-//         );
+router.post("/associate", async function (req, res, next) {
+    try {
+        const { industryCode, companyCode } = req.body;
+        const result = await db.query(
+                `INSERT INTO companies_industries (comp_code, indust_code) 
+                VALUES ($1, $2)
+                RETURNING comp_code, indust_code`,
+                [companyCode, industryCode]
+        );
 
-//         if (Object.keys(result.rows).length === 0) {
-//             throw new ExpressError('The company code entered cannot be found.', 404);
-//         }
-
-//         return res.json({company: result.rows[0]});
-//     } catch (err) {
-//         return next(err);
-//     }
-// });
-
-
-
-/** Deletes company. Should return 404 if company cannot be found.
- * Returns {status: "deleted"} */
-// router.delete("/:code", async function (req, res, next) {
-//     try {
-//         const result = await db.query(
-//             `DELETE FROM companies 
-//             WHERE code = $1`,
-//             [req.params.code]
-//         );
-
-//         if (result.rowCount === 0) {
-//             throw new ExpressError('The company code entered cannot be found.', 404);
-//         }
-
-//         return res.json({status: "Deleted"});
-//     }catch (err) {
-//         return next(err);
-//     }
-// });
+        return res.status(201).json({association: result.rows[0]});
+    } catch (err) {
+        return next(err);
+    }
+});
 
 
 
