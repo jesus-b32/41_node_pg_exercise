@@ -52,6 +52,10 @@ describe("GET /companies/:code", function() {
                     "code": "ibm",
                     "name": "IBM",
                     "description": "Big blue.",
+                    "industries": [
+                        "Accounting",
+                        "Information Technology"
+                    ],
                     "invoices": [
                         4
                     ]

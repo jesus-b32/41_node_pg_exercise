@@ -24,10 +24,14 @@ router.get("/", async function (req, res, next) {
  */
 router.get("/:code", async function (req, res, next) {
     try {
-        const companyResult = await db.query(
-            `SELECT code, name, description 
-            FROM companies
-            WHERE code=$1`, [req.params.code]);
+        const companyIndResult = await db.query(
+            `SELECT c.code, c.name, c.description, ind.industry
+                FROM companies AS c
+                LEFT JOIN companies_industries AS ci ON (c.code = ci.comp_code)
+                LEFT JOIN industries AS ind ON (ci.indust_code = ind.code)
+                WHERE c.code = $1`,
+            [req.params.code]
+        );
 
         const invoiceResult = await db.query(
             `SELECT id
@@ -36,17 +40,17 @@ router.get("/:code", async function (req, res, next) {
             [req.params.code]
         );
 
-        if (Object.keys(companyResult.rows).length === 0) {
+        if (Object.keys(companyIndResult.rows).length === 0) {
             throw new ExpressError('The company code entered cannot be found.', 404);
         }
 
-        const company = companyResult.rows[0];
-        const invoices = invoiceResult.rows;
+        const { code, name, description } = companyIndResult.rows[0];
 
-        // add invoices key to company object and use map to only include invoice id's from vaiable above
-        company.invoices = invoices.map(inv => inv.id);
+        // create two arrays that holds all the industries and invoices associated with selected company
+        const industries = companyIndResult.rows.map(ind => ind.industry);
+        const invoices = invoiceResult.rows.map(inv => inv.id);
 
-        return res.json({"company": company});
+        return res.json({"company": {code, name, description, industries, invoices}});
     } catch (err) {
         return next(err);
     }
